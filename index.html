@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyGeo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""/>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+
+    <style>
+        #map { 
+        height: 640px;
+        margin-left: 300px;
+        }
+    </style>
+</head>
+
+<body>
+  <!-- Barra di navigazione-->
+<nav class="navbar bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+      <img src="./mylogo.jpg" alt="Logo" width="50" height="50" class="d-inline-block align-text-center">
+      MyGeo
+    </a>
+  </div>
+</nav>
+</head>
+         <h4>Posizione corrente Sonda</h4>
+      <p>
+        Latitude: <span id="lat"></span><br />
+        Longitude: <span id="lon"></span><br />
+        Stato sonda: <span id="stato"></span> <br />
+        created : <span id="created"></span>
+      </p>
+<body>
+    <div id="map"></div>
+   <script>
+
+    // crea mappa coord e zoom
+        var map = L.map('map').setView([37.502554, 15.087136], 22);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+    // Leggi i dati da url con la funzione leggi() 
+
+      const api_url = 'https://api.thingspeak.com/channels/2924720/feeds.json?api_key=AX82IFG9X157UB8M&results=1';
+            
+      //let firstTime = true;
+      let icona = "";
+      
+      async function leggi() {
+        const response = await fetch(api_url);
+        const data = await response.json();      
+        const feeds = data.feeds[0];
+        const field1 = feeds.field1;
+        const field2 = feeds.field2;
+        const field5 = feeds.field5;
+        const created = feeds.created_at;
+
+
+ // Logica condizionale per assegnare l'icona
+if (field5 === "Allarme") {
+ icona = 'bullseye.svg';
+ } else if (field5 === "Movimento") {
+ icona = 'movimento.svg';
+ } else if (field5 === "Stop") {
+ icona = 'signstop.svg';
+ } else if (field5 === "Ferma") {
+ icona = 'pausa.svg';
+ }
+
+
+        // Crea Marker e icon
+      const myIcon = L.icon({
+        iconUrl: icona,
+        iconSize: [30, 22],
+        iconAnchor: [25, 16]
+      });
+      const marker = L.marker([0, 0], { icon: myIcon }).addTo(map);
+
+        marker.setLatLng([field1, field2]);
+        //if (firstTime) {
+          map.setView([field1, field2], map.getZoom());
+        //  firstTime = false;
+        //}
+        
+// Visualizza i dati sulla pagina
+          document.getElementById('lat').textContent = field1;
+          document.getElementById('lon').textContent = field2;
+          document.getElementById('stato').textContent = field5;
+          document.getElementById('created').textContent = created;
+
+        console.log(field1,field2,field5,created_at)
+      }
+
+      leggi();
+
+      // pagina refresh 
+      setInterval(leggi, 1000);
+
+  </script>
+   
+</body>
+</html>
